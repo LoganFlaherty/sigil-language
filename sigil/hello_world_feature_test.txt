@@ -1,0 +1,49 @@
+## Sources
+
+src h : "hello"
+src w : "world"
+src s : " "
+
+src helloWorld : ""
+src helloWorld2 : ""
+
+
+## Sigils
+
+# Is entered first that concats to make hello world
+sigil HelloWorldConcat ? h and w = "world":
+    helloWorld : h + s + w
+
+# Is entered second
+# Is entered again at sixth which fails the conditional and moves on
+sigil HelloWorld2InitSet ? h and helloWorld2 = "":
+    helloWorld2 : helloWorld
+    invoke LoopS
+
+# Is entered fourth (kinda) to move on from loop
+sigil SDone ? s = "    ":
+    invoke HelloWorldNext
+
+# Is entered third to recursively make s : "    "
+sigil LoopS ? s != "    ":
+    s : s + " "
+    invoke s
+
+# Is entered fifth that makes the final string of helloWorld2
+src i : "2"
+sigil HelloWorldNext:
+    helloWorld2 : s + helloWorld2 + i
+    invoke HelloWorldPrint
+
+# Is entered seventh to invoke Whisper which implicitly passes the args in the conditional
+sigil HelloWorldPrint ? helloWorld and helloWorld2:
+    invoke Whisper
+
+
+## Run
+
+# [Output] hello world    hello world2
+# [Runtime chain] ['h', 'HelloWorldConcat', 'HelloWorld2InitSet', 'LoopS', 's', 'LoopS', 's', 
+# 'LoopS', 's', 'SDone', 'HelloWorldNext', 'HelloWorldPrint']
+
+invoke h
