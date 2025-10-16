@@ -33,7 +33,7 @@ Limitations:
 - Cannot declare new sources inside a sigil. Declare it right over it if it's meant to only be use there. It isn't supported directly, but more for readability.
 
 ## Goals
-I would like to continue to develop sigil further by including all standard data types and built in functions. Project goals with sigil would be to be able to built a fully functional calculator minus graphs.
+I would like to continue to develop sigil further by including all standard data types and built in functions. A milestone project goal with sigil is be to be able to built a fully functional calculator minus graphs.
 
 ## Built-in Sigils
 - Whisper: a print to standard output that implicitly takes in the args with in conditional statement of the sigil Whisper was invoked. Does not support explitic arg passing yet.
