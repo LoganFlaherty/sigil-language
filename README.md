@@ -4,16 +4,16 @@ A repo for the sigil, a signal oriented programming language designed around the
 
 ## Design
 Syntax:
-- Sources "src" are state holders and signal emitters.
-    - Changing a source doesn’t implicitly trigger reactions (to avoid chaos). Reactions only occur through explicit invokes "invoke" of either a source or a sigil.
-- Sigils "sigil" define when something should happen through a conditional statement started with "?", and if it evaluates true then it moves on to the body (after ":", newlined, and indented).
+- Sources "src {name}" are dynamic state holders and signal emitters.
+    - Changing a source doesn’t implicitly trigger reactions (to avoid chaos). Reactions only occur through explicit invokes "invoke {name}" of either a source or a sigil.
+- Sigils "sigil {name}" define when something should happen through a conditional statement started with "?", and if it evaluates true then it moves on to the body (after ":", newlined, and indented).
     - For example: sigil Print ? x != "" and y != "":
                      invoke Whisper
-    - Optionally you can define a sigil with no conditional, but it makes it only invokable directly and not through source invokes.
+    - Optionally you can define a sigil with no conditional, but it makes it only directly invokable and not through source invokes.
 - Assignments use a colon ":".
     - For example: src x : "7"
 - Comparisons use a single equals sign "=".
-- Built-in sigils (like Whisper) are defined inside the interpreter, so no need to define in a file. All built-in sigils can be found at the bottom of this README.
+- Built-in sigils (like Whisper) are defined inside the interpreter. All built-in sigils can be found at the bottom of this README.
 
 Execution order:
 - Either a source or sigil is invoked.
