@@ -32,3 +32,8 @@ Limitations:
 
 ## Goals
 I would like to continue to develop sigil further by including all standard data types and built in functions. Project goals with sigil would be to be able to built a fully functional calculator minus graphs.
+
+## Built-in Sigils
+- Whisper: a print to standard output that implicitly takes in the args with in conditional statement of the sigil Whisper was invoked. Does not support explitic arg passing yet.
+    - For example: sigil Print ? x and y:
+                       invoke Whisper
