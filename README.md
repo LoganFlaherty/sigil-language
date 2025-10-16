@@ -1,8 +1,8 @@
-## sigil-language
-# Overview
+# sigil-language
+## Overview
 A repo for the sigil, a signal oriented programming language designed around the idea of signal propagation rather than traditional function calls or control flow. The core premise is that execution is driven by reactive relationships between sources (signal variables) and sigils (a combined idea of a signal, function, and conditional statement) and how they are invoked. The execution flow is akin to a reactive graph. 
 
-# Design
+## Design
 Syntax:
 - Sources "src" are state holders and signal emitters.
     - Changing a source doesn’t implicitly trigger reactions (to avoid chaos). Reactions only occur through explicit invokes "invoke" of either a source or a sigil.
@@ -30,5 +30,5 @@ Limitations:
 - Can only handle strings.
 - Cannot declare new sources inside a sigil. Declare it right over it if it's meant to only be use there. It isn't supported directly, but more for readability.
 
-Goals:
+## Goals
 I would like to continue to develop sigil further by including all standard data types and built in functions. Project goals with sigil would be to be able to built a fully functional calculator minus graphs.
