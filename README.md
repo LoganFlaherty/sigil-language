@@ -1,19 +1,19 @@
 # sigil-language
 ## Overview
-A repo for the sigil, a signal oriented programming language designed around the idea of signal propagation rather than traditional function calls or control flow. The core premise is that execution is driven by reactive relationships between sources (signal variables) and sigils (a combined idea of a signal, function, and conditional statement) and how they are invoked. The execution flow is akin to a reactive graph. 
+A repo for the sigil language, a signal oriented programming language designed around the idea of signal propagation rather than traditional function calls and control flow. The core premise is that execution is driven by reactive relationships between sources (signal variables) and sigils (a combined idea of a signal, function, and conditional statement) and how they are invoked. The execution flow is akin to a reactive graph. 
 
 ## Design
 Syntax:
 - Sources "src {name}" are dynamic state holders and signal emitters.
     - Changing a source doesn’t implicitly trigger reactions (to avoid chaos). Reactions only occur through explicit invokes "invoke {name}" of either a source or a sigil.
 - Sigils "sigil {name}" define when something should happen through a conditional statement started with "?", and if it evaluates true then it moves on to the body (after ":", newlined, and indented).
-    - For example: sigil Print ? x != "" and y != "":
+    - Example: sigil Print ? x != "" and y != "":
                      invoke Whisper
     - Optionally you can define a sigil with no conditional, but it makes it only directly invokable and not through source invokes.
 - Assignments use a colon ":".
-    - For example: src x : "7"
+    - Example: src x : "7"
 - Comparisons use a single equals sign "=".
-- Built-in sigils (like Whisper) are defined inside the interpreter. All built-in sigils can be found at the bottom of this README.
+- Built-in sigils (like Whisper) are defined inside the interpreter. However, unlike regular sigils, they can only be invoked inside a sigil due to arg passing restrictions. All built-in sigils can be found at the bottom of this README.
 
 Execution order:
 - Either a source or sigil is invoked.
@@ -39,5 +39,11 @@ Once sigil is about 1.0 ready, then a c interpreter will be developed.
 
 ## Built-in Sigils
 - Whisper: a print to standard output that implicitly takes in the args with in conditional statement of the sigil Whisper was invoked. Does not support explitic arg passing yet.
-    - For example: sigil Print ? x and y:
+    - Example: sigil Print ? x and y:
                        invoke Whisper
+- Pulse: a loop handler that will requeue the sigil it is invoked in, up to till it is invoked, until the conditional statement fails.
+    - Example: sigil Loop ? x < 5:
+                       x : x + 1
+                       invoke Pulse
+                       invoke Whisper
+      Loop will be pulsed until x equals        5, then Whisper will print x.
