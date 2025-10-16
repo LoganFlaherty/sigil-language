@@ -15,6 +15,7 @@ class SigilDecl:
         self.name = name
         self.condition_expr = condition_expr
         self.body = body
+
         # Extract dependencies in order of appearance from condition_expr
         self.deps = re.findall(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', condition_expr) if condition_expr else []
 
@@ -22,19 +23,38 @@ class Interpreter:
     def __init__(self):
         self.src_table = {}
         self.sigil_table = {}
-        self.built_in_sigils = {"Whisper": self.whisper}
+        self.built_in_sigils = {
+            "Whisper": self.whisper,
+            "Pulse" : self.pulse
+        }
         self.invoke_queue = []
         self.runtime_chain = []
+        self.last_sigil_popped = None
+        self.pulse_flag = False
 
     # Defined built-in sigils:
 
+    # Prints to stdout
     def whisper(self, *args):
-        print("".join(str(a) for a in args))
+        print("".join(str(arg) for arg in args))
+
+    # Loops the body of the sigil invoked in until the the condition fails
+    def pulse(self):
+        sigil = self.sigil_table.get(self.last_sigil_popped)
+        if not sigil:
+            print(f"[Err] Pulse has nothing to queue.")
+            return
+
+        if sigil.condition_expr and self.eval_expr(sigil.condition_expr):
+            # Re-enqueue this sigil at the end of the invoke queue
+            self.invoke_queue.append(sigil.name)
+        else:
+            self.pulse_flag = False
 
     # Rest of interpreter:
 
     def parse(self, program):
-        lines = [l.rstrip() for l in program.strip().splitlines() if l.strip() and not l.strip().startswith("#")]
+        lines = [line.rstrip() for line in program.strip().splitlines() if line.strip() and not line.strip().startswith("#")]
         i = 0
         while i < len(lines):
             line = lines[i].strip()
@@ -57,21 +77,22 @@ class Interpreter:
                 i -= 1
                 self.sigil_table[name] = SigilDecl(name, condition_expr, body)
             elif line.startswith("invoke "):
-                targets = [t.strip() for t in line[7:].split(",")]
-                for t in targets:
-                    self.invoke_queue.append(t)
+                targets = [target.strip() for target in line[7:].split(",")]
+                for target in targets:
+                    if target in self.built_in_sigils:
+                        print(f"[Warn] cannot invoke {target} outside of a sigil.")
+                    else:
+                        self.invoke_queue.append(target)
             i += 1
 
     def eval_expr(self, expr):
-        expr_eval = expr
-
         # Convert comparison '=' to '==' for Python eval
         # Only replace '=' that are not part of !=, >=, <=, or ==
-        expr_eval = re.sub(r'(?<![!<>=])=(?!=)', '==', expr_eval)
+        expr_eval = re.sub(r'(?<![!<>=])=(?!=)', '==', expr)
 
         # Replace sources with their values
-        for k, v in self.src_table.items():
-            expr_eval = re.sub(rf"\b{k}\b", f"'{v}'", expr_eval)
+        for key, val in self.src_table.items():
+            expr_eval = re.sub(rf"\b{key}\b", f"'{val}'", expr_eval)
         
         try:
             return eval(expr_eval)
@@ -84,24 +105,30 @@ class Interpreter:
             self.runtime_chain.append(target)
             if target in self.src_table:
                 # Evaluate all conditional sigils
-                for s in self.sigil_table.values():
-                    if s.condition_expr and target in s.deps:
-                        cond = self.eval_expr(s.condition_expr)
-                        if cond:
-                            self.runtime_chain.append(s.name)
-                            self.execute_sigil(s)
+                for sigil in self.sigil_table.values():
+                    if sigil.condition_expr and target in sigil.deps and self.eval_expr(sigil.condition_expr):
+                        self.runtime_chain.append(sigil.name)
+                        self.execute_sigil(sigil)
             elif target in self.sigil_table:
+                self.last_sigil_popped = target
                 self.execute_sigil(self.sigil_table[target])
             elif target in self.built_in_sigils:
                 self.built_in_sigils[target]()
             else:
-                print(f"[Err] Unknown target {target}")
+                print(f"[Err] Unknown target {target}.")
 
     def execute_sigil(self, sigil):
         for stmt in sigil.body:
             if stmt.startswith("invoke "):
                 name = stmt.split(" ", 1)[1].strip()
-                if name in self.built_in_sigils:
+                if name == "Pulse":
+                    self.pulse_flag = True
+                    self.built_in_sigils[name]()
+                    
+                    # When Pulse is active, cut off the rest of the body
+                    if self.pulse_flag:
+                        break
+                elif name in self.built_in_sigils:
                     args = [self.src_table[dep] for dep in sigil.deps if dep in self.src_table]
                     self.built_in_sigils[name](*args)
                 else:
@@ -110,11 +137,7 @@ class Interpreter:
                 name, expr = stmt.split(":", 1)
                 name = name.strip()
                 expr = expr.strip()
-
-                # Evaluate expression before assignment
                 value = self.eval_expr(expr)
-
-                # Store in sources table
                 self.src_table[name] = value
 
 

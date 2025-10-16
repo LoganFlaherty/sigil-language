@@ -20,14 +20,11 @@ sigil HelloWorld2InitSet ? h and helloWorld2 = "":
     helloWorld2 : helloWorld
     invoke LoopS
 
-# Is entered fourth (kinda) to move on from loop
-sigil SDone ? s = "    ":
-    invoke HelloWorldNext
-
 # Is entered third to recursively make s : "    "
 sigil LoopS ? s != "    ":
     s : s + " "
-    invoke s
+    invoke Pulse
+    invoke HelloWorldNext
 
 # Is entered fifth that makes the final string of helloWorld2
 src i : "2"
@@ -43,7 +40,6 @@ sigil HelloWorldPrint ? helloWorld and helloWorld2:
 ## Run
 
 # [Output] hello world    hello world2
-# [Runtime chain] ['h', 'HelloWorldConcat', 'HelloWorld2InitSet', 'LoopS', 's', 'LoopS', 's', 
-# 'LoopS', 's', 'SDone', 'HelloWorldNext', 'HelloWorldPrint']
+# [Runtime chain] ['h', 'HelloWorldConcat', 'HelloWorld2InitSet', 'LoopS', 'LoopS', 'LoopS', 'HelloWorldNext', 'HelloWorldPrint']
 
 invoke h
