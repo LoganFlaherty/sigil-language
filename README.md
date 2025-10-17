@@ -7,11 +7,15 @@ Syntax:
 - Sources "src {name}" are dynamic state holders and signal emitters.
     - Changing a source doesn’t implicitly trigger reactions (to avoid chaos). Reactions only occur through explicit invokes "invoke {name}" of either a source or a sigil.
 - Sigils "sigil {name}" define when something should happen through a conditional statement started with "?", and if it evaluates true then it moves on to the body (after ":", newlined, and indented).
-      Example: sigil Print ? x != "" and y != "":
-                   invoke Whisper
+    '''
+    sigil Print ? x != "" and y != "":
+        invoke Whisper
+    '''
     - Optionally you can define a sigil with no conditional, but it makes it only directly invokable and not through source invokes.
 - Assignments use a colon ":".
-      Example: src x : "7"
+    '''
+    src x : "7"
+    '''
 - Comparisons use a single equals sign "=".
 - Built-in sigils (like Whisper) are defined inside the interpreter. However, unlike regular sigils, they can only be invoked inside a sigil due to arg passing restrictions. All built-in sigils can be found at the bottom of this README.
 
@@ -39,11 +43,15 @@ Once sigil is about 1.0 ready, then a c interpreter will be developed.
 
 ## Built-in Sigils
 - Whisper: a print to standard output that implicitly takes in the args with in conditional statement of the sigil Whisper was invoked. Does not support explitic arg passing yet.
-      Example: sigil Print ? x and y:
-                   invoke Whisper
+    '''
+    sigil Print ? x and y:
+        invoke Whisper
+    '''
 - Pulse: a loop handler that will requeue the sigil it is invoked in, up to till it is invoked, until the conditional statement fails.
-      Example: sigil Loop ? x < 5:
-                   x : x + 1
-                   invoke Pulse
-                   invoke Whisper
-      Loop will be pulsed until x equals 5, then Whisper will print x.
+    '''
+    / Loop will be pulsed until x equals 5, then Whisper will print x.
+    sigil Loop ? x < 5:
+        x : x + 1
+        invoke Pulse
+        invoke Whisper
+    '''
