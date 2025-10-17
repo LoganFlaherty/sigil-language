@@ -18,11 +18,12 @@ Syntax:
     ```
 - Comparisons use a single equals sign "=".
 - Built-in sigils (like Whisper) are defined inside the interpreter. However, unlike regular sigils, they can only be invoked inside a sigil due to arg passing restrictions. All built-in sigils can be found at the bottom of this README.
+- Any invokes wrote outside of a sigil, is considered your run code and how you kickstart a program.
 
 Execution order:
-- Either a source or sigil is invoked.
-  - When invoking a source, all sigils with that source in its conditional are then executed in the order they were defined in the file.
-  - Invoked sigils are executed next in queue, allowing recursion and looping.
+- A source or sigil is invoked.
+  - When invoking a source, all sigils dependent on it in it's conditional are then executed in the order they were defined in the file.
+  - Invoked sigils are executed next in queue, allowing for direct linear flow.
 - Program ends once the invoke queue has reached zero.
 
 Interpretation:
