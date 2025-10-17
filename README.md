@@ -22,6 +22,10 @@ Syntax:
     ```
     invoke x
     ```
+    - Additionally, you can invoke mutiple times on a single line.
+        ```
+        invoke Pulse, Whisper
+        ```
 
 Execution order:
 - A source or sigil is invoked.
