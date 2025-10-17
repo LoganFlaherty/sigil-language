@@ -32,52 +32,17 @@ class Interpreter:
         self.last_sigil_popped = None
         self.pulse_flag = False
 
-    # Defined built-in sigils:
-
-    # Prints to stdout
-    def whisper(self, *args):
-        print("".join(str(arg) for arg in args))
-
-    # Loops the body of the sigil invoked in until the the condition fails
-    def pulse(self):
-        sigil = self.sigil_table.get(self.last_sigil_popped)
-        if not sigil:
-            print(f"[Err] Pulse has nothing to queue.")
-            return
-
-        if sigil.condition_expr and self.eval_expr(sigil.condition_expr):
-            # Re-enqueue this sigil at the end of the invoke queue
-            self.invoke_queue.append(sigil.name)
-        else:
-            self.pulse_flag = False
-
-    # Rest of interpreter:
-
     def parse(self, program):
-        lines = [line.rstrip() for line in program.strip().splitlines() if line.strip() and not line.strip().startswith("#")]
+        lines = deconstruct_program(program)
         i = 0
         while i < len(lines):
             line = lines[i].strip()
             if line.startswith("src "):
-                name, val = line[4:].split(":", 1)
-                self.src_table[name.strip()] = val.strip().strip('"')
+                construct_src(self, line)
             elif line.startswith("sigil "):
-                # Extract name and optional conditional
-                rest = line[6:]
-                name = rest.split("?")[0].split(":")[0].strip()
-                condition_expr = None
-                if "?" in line:
-                    condition_expr = line.split("?", 1)[1].split(":", 1)[0].strip()
-                # Collect body
-                body = []
-                i += 1
-                while i < len(lines) and lines[i].startswith((" ", "\t")):
-                    body.append(lines[i].strip())
-                    i += 1
-                i -= 1
-                self.sigil_table[name] = SigilDecl(name, condition_expr, body)
+                i = construct_sigil(self, lines, line, i)
             elif line.startswith("invoke "):
-                targets = [target.strip() for target in line[7:].split(",")]
+                targets = get_invoke_targets(line)
                 for target in targets:
                     if target in self.built_in_sigils:
                         print(f"[Warn] cannot invoke {target} outside of a sigil.")
@@ -120,25 +85,108 @@ class Interpreter:
     def execute_sigil(self, sigil):
         for stmt in sigil.body:
             if stmt.startswith("invoke "):
-                name = stmt.split(" ", 1)[1].strip()
-                if name == "Pulse":
-                    self.pulse_flag = True
-                    self.built_in_sigils[name]()
-                    
+                if "," in stmt:
+                    targets = get_invoke_targets(stmt)
+                    for target in targets:
+                        route_invokes(self, target, sigil)
+                        
+                        # When Pulse is active, cut off the rest of the body
+                        if self.pulse_flag:
+                            return
+                else:
+                    target = stmt.split(" ", 1)[1].strip()
+                    route_invokes(self, target, sigil)
+
                     # When Pulse is active, cut off the rest of the body
                     if self.pulse_flag:
-                        break
-                elif name in self.built_in_sigils:
-                    args = [self.src_table[dep] for dep in sigil.deps if dep in self.src_table]
-                    self.built_in_sigils[name](*args)
-                else:
-                    self.invoke_queue.append(name)
+                        return
+                    
             elif ":" in stmt:
-                name, expr = stmt.split(":", 1)
-                name = name.strip()
+                src, expr = stmt.split(":", 1)
+                src = src.strip()
                 expr = expr.strip()
                 value = self.eval_expr(expr)
-                self.src_table[name] = value
+                self.src_table[src] = value
+
+
+    ## Built-in Sigils
+
+    # Prints to stdout
+    def whisper(self, *args):
+        print("".join(str(arg) for arg in args))
+
+    # Loops the body of the sigil invoked in until the the condition fails
+    def pulse(self):
+        sigil = self.sigil_table.get(self.last_sigil_popped)
+        if not sigil:
+            print(f"[Err] Pulse has nothing to queue.")
+            return
+
+        if sigil.condition_expr and self.eval_expr(sigil.condition_expr):
+            # Requeue sigil
+            self.invoke_queue.append(sigil.name)
+        else:
+            self.pulse_flag = False
+
+
+## Helpers
+
+def construct_src(self, line):
+    try:
+        name, val = line[4:].split(":", 1)
+        val = val.strip().strip('"')
+    except:
+        name = line[4:]
+        val = None
+    self.src_table[name.strip()] = val
+
+def construct_sigil(self, lines, line, i):
+    # Extract name and optional conditional
+    rest = line[6:]
+    name = rest.split("?")[0].split(":")[0].strip()
+    condition_expr = None
+    if "?" in line:
+        condition_expr = line.split("?", 1)[1].split(":", 1)[0].strip()
+    
+    # Collect body
+    body = []
+    i += 1
+    while i < len(lines) and lines[i].startswith((" ", "\t")):
+        body.append(lines[i].strip())
+        i += 1
+    self.sigil_table[name] = SigilDecl(name, condition_expr, body)
+    i -= 1
+    return i
+
+def deconstruct_program(program):
+    lines = []
+    for line in program.strip().splitlines():
+        if line.strip() and not line.strip().startswith("#"):
+            lines.append(line.rstrip())
+    return lines
+
+def get_sigil_dependencies(self, sigil):
+    dependencies = []
+    for dep in sigil.deps:
+        if dep in self.src_table:
+            dependencies.append(self.src_table[dep])
+    return dependencies
+
+def get_invoke_targets(line):
+    targets = []
+    for target in line[7:].split(","):
+        targets.append(target.strip())
+    return targets
+
+def route_invokes(self, target, sigil):
+    if target == "Pulse":
+        self.pulse_flag = True
+        self.built_in_sigils[target]()
+    elif target in self.built_in_sigils:
+        args = get_sigil_dependencies(self, sigil)
+        self.built_in_sigils[target](*args)
+    else:
+        self.invoke_queue.append(target)
 
 
 ## Run Interpreter
@@ -164,7 +212,3 @@ if os.path.exists(path):
 else:
     print(f"[Err] '{sys.argv}' does not exist.")
     sys.exit(1)
-
-
-
-
