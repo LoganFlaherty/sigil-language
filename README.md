@@ -57,7 +57,7 @@ Once sigil is about 1.0 ready, then a c interpreter will be developed.
     ```
 - Pulse: a loop handler that will requeue the sigil it is invoked in, up to till it is invoked, until the conditional statement fails.
     ```
-    / Loop will be pulsed until x equals 5, then Whisper will print x.
+    # Loop will be pulsed until x equals 5, then Whisper will print x.
     sigil Loop ? x < 5:
         x : x + 1
         invoke Pulse
