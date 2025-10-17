@@ -9,15 +9,14 @@ class SrcDecl:
     def __init__(self, name, value):
         self.name = name
         self.value = value
+        self.sig_deps = [] # All sigils dependent on this source
 
 class SigilDecl:
-    def __init__(self, name, condition_expr, body):
+    def __init__(self, name, condition_expr, body, deps):
         self.name = name
         self.condition_expr = condition_expr
         self.body = body
-
-        # Extract dependencies in order of appearance from condition_expr
-        self.deps = re.findall(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', condition_expr) if condition_expr else []
+        self.deps = deps
 
 class Interpreter:
     def __init__(self):
@@ -56,8 +55,8 @@ class Interpreter:
         expr_eval = re.sub(r'(?<![!<>=])=(?!=)', '==', expr)
 
         # Replace sources with their values
-        for key, val in self.src_table.items():
-            expr_eval = re.sub(rf"\b{key}\b", f"'{val}'", expr_eval)
+        for src in self.src_table.values():
+            expr_eval = re.sub(rf"\b{src.name}\b", f"'{src.value}'", expr_eval)
         
         try:
             return eval(expr_eval)
@@ -70,10 +69,12 @@ class Interpreter:
             self.runtime_chain.append(target)
             if target in self.src_table:
                 # Evaluate all conditional sigils
-                for sigil in self.sigil_table.values():
-                    if sigil.condition_expr and target in sigil.deps and self.eval_expr(sigil.condition_expr):
+                for sig_dep in self.src_table[target].sig_deps:
+                    sigil = self.sigil_table[sig_dep]
+                    if sigil.condition_expr and self.eval_expr(sigil.condition_expr):
                         self.runtime_chain.append(sigil.name)
                         self.execute_sigil(sigil)
+                    
             elif target in self.sigil_table:
                 self.last_sigil_popped = target
                 self.execute_sigil(self.sigil_table[target])
@@ -106,7 +107,7 @@ class Interpreter:
                 src = src.strip()
                 expr = expr.strip()
                 value = self.eval_expr(expr)
-                self.src_table[src] = value
+                self.src_table[src].value = value
 
 
     ## Built-in Sigils
@@ -131,19 +132,10 @@ class Interpreter:
 
 ## Helpers
 
-def construct_src(self, line):
-    try:
-        name, val = line[4:].split(":", 1)
-        val = val.strip().strip('"')
-    except:
-        name = line[4:]
-        val = None
-    self.src_table[name.strip()] = val
-
 def construct_sigil(self, lines, line, i):
     # Extract name and optional conditional
-    rest = line[6:]
-    name = rest.split("?")[0].split(":")[0].strip()
+    sigil_header = line[6:]
+    name = sigil_header.split("?")[0].split(":")[0].strip()
     condition_expr = None
     if "?" in line:
         condition_expr = line.split("?", 1)[1].split(":", 1)[0].strip()
@@ -154,9 +146,31 @@ def construct_sigil(self, lines, line, i):
     while i < len(lines) and lines[i].startswith((" ", "\t")):
         body.append(lines[i].strip())
         i += 1
-    self.sigil_table[name] = SigilDecl(name, condition_expr, body)
+    
+    # Extract dependencies in order of appearance from condition_expr
+    deps = []
+    if condition_expr:
+        deps = condition_expr.split()
+        for dep in deps:
+            if dep in self.src_table:
+                self.src_table[dep].sig_deps.append(name)
+            else:
+                deps.remove(dep)
+    
+    self.sigil_table[name] = SigilDecl(name, condition_expr, body, deps)
     i -= 1
     return i
+
+def construct_src(self, line):
+    try:
+        name, val = line[4:].split(":", 1)
+        val = val.strip().strip('"')
+    except:
+        name = line[4:]
+        val = None
+    name = name.strip()
+    src = SrcDecl(name, val)
+    self.src_table[name] = src
 
 def deconstruct_program(program):
     lines = []
@@ -164,13 +178,6 @@ def deconstruct_program(program):
         if line.strip() and not line.strip().startswith("#"):
             lines.append(line.rstrip())
     return lines
-
-def get_sigil_dependencies(self, sigil):
-    dependencies = []
-    for dep in sigil.deps:
-        if dep in self.src_table:
-            dependencies.append(self.src_table[dep])
-    return dependencies
 
 def get_invoke_targets(line):
     targets = []
@@ -183,7 +190,9 @@ def route_invokes(self, target, sigil):
         self.pulse_flag = True
         self.built_in_sigils[target]()
     elif target in self.built_in_sigils:
-        args = get_sigil_dependencies(self, sigil)
+        args = []
+        for dep in sigil.deps:
+            args.append(self.src_table[dep].value)
         self.built_in_sigils[target](*args)
     else:
         self.invoke_queue.append(target)

@@ -19,7 +19,7 @@ sigil HelloWorld2InitSet ? h and helloWorld2 = "":
     helloWorld2 : helloWorld
     invoke LoopS
 
-# Is entered third to recursively make s : "    "
+# Is entered third to recursively increase s
 sigil LoopS ? s != "    ":
     s : s + " "
     invoke Pulse, HelloWorldNext
@@ -30,7 +30,7 @@ sigil HelloWorldNext:
     helloWorld2 : s + helloWorld2 + i
     invoke HelloWorldPrint
 
-# Is entered seventh to invoke Whisper which implicitly passes the args in the conditional
+# Is entered fifth to invoke Whisper which implicitly passes the args in the conditional
 sigil HelloWorldPrint ? helloWorld and helloWorld2:
     invoke Whisper
 
@@ -40,5 +40,4 @@ sigil HelloWorldPrint ? helloWorld and helloWorld2:
 invoke h
 
 # [Output] hello world    hello world2
-
 # [Runtime chain] ['h', 'HelloWorldConcat', 'HelloWorld2InitSet', 'LoopS', 'LoopS', 'LoopS', 'HelloWorldNext', 'HelloWorldPrint']
