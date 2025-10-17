@@ -22,7 +22,7 @@ Syntax:
     ```
     invoke x
     ```
-    - Additionally, you can invoke mutiple times on a single line.
+    - Additionally, you can invoke mutiple times on a single line. Both inside and out of a sigil.
         ```
         invoke Pulse, Whisper
         ```
