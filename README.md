@@ -4,7 +4,7 @@ A repo for the sigil language, a signal oriented programming language designed a
 
 ## Design
 Syntax:
-- Sources "src {name}" are dynamic state holders and signal emitters.
+- Sources "src {name}" are dynamic state holders and signal emitters. They are declared outside of sigils, typically near the top of your file.
     - Changing a source doesn’t implicitly trigger reactions (to avoid chaos). Reactions only occur through explicit invokes "invoke {name}" of either a source or a sigil.
 - Sigils "sigil {name}" define when something should happen through a conditional statement started with "?", and if it evaluates true then it moves on to the body (after ":", newlined, and indented).
     ```
@@ -38,7 +38,7 @@ Interpretation:
 
 Limitations:
 - Can only handle strings.
-- Cannot declare new sources inside a sigil. Declare it right over it if it's meant to only be use there. It isn't supported directly, but more for readability.
+- Cannot declare new sources inside a sigil. Declare it right over it if it's meant to only be used there. It isn't supported directly, but more for readability.
 
 ## Goals
 I would like to continue to develop sigil further by including all standard data types and built in functions. A milestone project goal with sigil is be to be able to built a fully functional calculator minus graphs.
