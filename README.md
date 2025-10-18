@@ -35,7 +35,9 @@ Execution order:
 
 Interpretation:
 - Wrote in Python, so Python is needed to run the interpreter.
-    - Cmd: python interpreter.py {file path} {Optional: y (determines if the runtime chain is printed to stdout after the program ends.)}
+    - Cmd: python interpreter.py {file path} {optional args}
+        - Option 'c' prints the runtime chain after execution.
+        - Option 't' prints the execution time.
 - Since sigil, at this time, does not support nested logic an AST is not required to have it interpreted i.e. it is all top-level.
 - During parsing, the invoke queue is filled with all explicit invokes.
 - Sigils that will be invoked through a source invoke, are not put in the queue but interpreted at runtime.
