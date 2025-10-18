@@ -1,6 +1,7 @@
 import re
 import os
 import sys
+import time
 
 
 ## Classes
@@ -44,7 +45,7 @@ class Interpreter:
                 targets = get_invoke_targets(line)
                 for target in targets:
                     if target in self.built_in_sigils:
-                        print(f"[Warn] cannot invoke {target} outside of a sigil.")
+                        raise Exception(f"Cannot invoke {target} outside of a sigil.")
                     else:
                         self.invoke_queue.append(target)
             i += 1
@@ -81,7 +82,7 @@ class Interpreter:
             elif target in self.built_in_sigils:
                 self.built_in_sigils[target]()
             else:
-                print(f"[Err] Unknown target {target}.")
+                raise Exception(f"Unknown target {target}.")
 
     def execute_sigil(self, sigil):
         for stmt in sigil.body:
@@ -120,8 +121,7 @@ class Interpreter:
     def pulse(self):
         sigil = self.sigil_table.get(self.last_sigil_popped)
         if not sigil:
-            print(f"[Err] Pulse has nothing to queue.")
-            return
+            raise Exception("Pulse has nothing to queue.")
 
         if sigil.condition_expr and self.eval_expr(sigil.condition_expr):
             # Requeue sigil
@@ -200,12 +200,11 @@ def route_invokes(self, target, sigil):
 
 ## Run Interpreter
 
+start_time = time.perf_counter()
+
 args = len(sys.argv)
 if args < 2:
-    print("[Err] File path not passed.")
-    sys.exit(1)
-elif args > 3:
-    print("[Err] Too many args. Only pass a file path and optionally 'y' to print runtime chain option.")
+    raise Exception("File path not passed.")
 
 path = sys.argv[1]
 if os.path.exists(path):
@@ -215,9 +214,21 @@ if os.path.exists(path):
     intr = Interpreter()
     intr.parse(file)
     intr.run()
-
-    if args == 3 and sys.argv[2] == "y":
-        print(f"[Runtime chain] {intr.runtime_chain}")
+    
 else:
-    print(f"[Err] '{sys.argv}' does not exist.")
-    sys.exit(1)
+    raise Exception(f"'{path}' does not exist.")
+
+end_time = time.perf_counter()
+
+i = 0
+while i < args:
+    if i < 2:
+        pass
+    elif sys.argv[i] == "c":
+        print(f"Runtime chain: {intr.runtime_chain}")
+    elif sys.argv[i] == "t":
+        elapsed_time = end_time - start_time
+        print(f"Execution time: {elapsed_time:.4f} seconds")
+    else:
+        raise Warning(f"{sys.argv[i]} is not a valid arg.")
+    i += 1
