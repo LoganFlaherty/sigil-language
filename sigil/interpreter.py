@@ -168,7 +168,7 @@ def construct_src(self, line):
 def deconstruct_program(program):
     lines = []
     for line in program.strip().splitlines():
-        line = line.split("#", 1)[0]
+        line = line.split("#", 1)[0].rstrip()
         if line:
             lines.append(line.rstrip())
     return lines
@@ -225,4 +225,5 @@ while i < args:
         print(f"Execution time: {elapsed_time:.4f} seconds")
     else:
         raise Warning(f"{sys.argv[i]} is not a valid arg.")
+
     i += 1
