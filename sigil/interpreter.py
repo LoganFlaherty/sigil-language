@@ -79,12 +79,19 @@ class Interpreter:
         src_deps = []
         if len(sigil_header) > 1:
             condition_expr = sigil_header[1].strip()
-        
+
+            # Change = into ==
+            if "=" in condition_expr:
+                condition_expr = re.sub(r'(?<=\s)=(?=\s)', '==', condition_expr)
+
             # Extract dependencies in order of appearance from condition_expr
-            for i in condition_expr.split():
-                if i.strip() not in src_deps and i in self.global_table:
-                    src_deps.append(i)
-                    self.global_table[i].sig_deps.append(name)
+            for e in condition_expr.split():
+                e = e.strip()
+                i_glob = self.global_table.get(e)
+                if i_glob and i_glob.name not in src_deps:
+                    src_deps.append(i_glob.name)
+                    i_glob.sig_deps.append(name)
+
 
         # Collect body
         body = []
@@ -154,22 +161,19 @@ class Interpreter:
                 raise Exception(f"Unknown target {target}.")
 
     def eval_expr(self, expr, src_deps = None):
-        # Replace = to ==
-        expr = re.sub(r'(?<![!<>=])=(?!=)', '==', expr)
-        
-        # Map source to values
-        locals_map = {}
+        # Build local cache
+        expr_cache = {}
         if src_deps:
             for dep in src_deps:
-                locals_map[dep] = self.global_table.get(dep).value
+                expr_cache[dep] = self.global_table.get(dep).value
         else:
             for name, obj in self.global_table.items():
                 if isinstance(obj, SrcDecl):
-                    locals_map[name] = obj.value
-            
+                    expr_cache[name] = obj.value
+        
         # Evaluate with locals
         try:
-            return eval(expr, {"__builtins__": None}, locals_map)
+            return eval(expr, {"__builtins__": None}, expr_cache)
         except Exception:
             return None
 
@@ -211,8 +215,6 @@ class Interpreter:
 
 ## Run Interpreter
 
-start_time = time.perf_counter()
-
 args = len(sys.argv)
 if args < 2:
     raise Exception("File path not passed.")
@@ -222,14 +224,14 @@ if os.path.exists(path):
     with open(path, 'r') as file:
         file = file.read()
 
+    start_time = time.perf_counter()
     intr = Interpreter()
     intr.parse(file)
     intr.run()
+    end_time = time.perf_counter()
     
 else:
     raise Exception(f"'{path}' does not exist.")
-
-end_time = time.perf_counter()
 
 i = 0
 while i < args:
