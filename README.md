@@ -1,10 +1,10 @@
-# sigil-language
+# Sigil
 ## Overview
-A repo for the sigil language, a signal oriented programming language designed around the idea of signal propagation rather than traditional function calls and control flow. The core premise is that execution is driven by reactive relationships between sources (signal variables) and sigils (a combined idea of a signal, function, and conditional statement).
+A repo for the Sigil language, a signal oriented programming language designed around the idea of signal propagation rather than traditional function calls and control flow. The core premise is that execution is all top-level and driven by the reactive relationships between sources (signal variables) and sigils (a combined idea of a signal, function, and conditional statement).
 
 ## Recent Updates
 - Heavily optimized the interpreter to only be ~2x slower than python equivalent code.
-- Supports the basic data types (int, float, string literal, and bools). No arrays yet, but soon.
+- Supports the basic data types (int, float, string literal, and bools).
 
 ## Design
 Syntax:
@@ -39,10 +39,10 @@ Execution order:
 
 Interpretation:
 - Wrote in Python 3.14.
-    - Cmd: python interpreter.py {file path} {optional args}
+    - Cmd: python run.py {file path} {optional args}
         - Option 'c' prints the runtime chain after execution.
         - Option 't' prints the execution time.
-- Since sigil, at this time, does not support nested logic an AST is not required to have it interpreted i.e. it is all top-level.
+- Since sigil does not support nested logic so an AST is not needed for interpretation since it executes from a queue.
 - During parsing, the invoke queue is filled with all explicit invokes.
 - Sigils that will be invoked through a source invoke, are not put in the queue but interpreted at runtime.
 
@@ -53,8 +53,7 @@ Restrictions:
 - Cannot directly pass args to a built-in sigil.
 
 ## Goals
-- A milestone project goal with sigil is be to be able to built a fully functional calculator minus graphs.
-- Once sigil is about 1.0 ready, then a c interpreter will be developed.
+- Happy with this language prototype and will be working on a Rust version of the interpreter. From there new features will then be developed.
 
 ## Built-in Sigils
 - Whisper: a print to standard output that implicitly takes in the args within conditional statement of the sigil Whisper was invoked.
