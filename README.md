@@ -1,6 +1,6 @@
 # sigil-language
 ## Overview
-A repo for the sigil language, a signal oriented programming language designed around the idea of signal propagation rather than traditional function calls and control flow. The core premise is that execution is driven by reactive relationships between sources (signal variables) and sigils (a combined idea of a signal, function, and conditional statement). The execution flow is akin to a reactive graph.
+A repo for the sigil language, a signal oriented programming language designed around the idea of signal propagation rather than traditional function calls and control flow. The core premise is that execution is driven by reactive relationships between sources (signal variables) and sigils (a combined idea of a signal, function, and conditional statement).
 
 ## Recent Updates
 - Heavily optimized the interpreter to only be ~2.5x slower than raw python.
@@ -20,7 +20,7 @@ Syntax:
     ```
     src x : "7"
     ```
-- Comparisons use a single equals sign "=". Note that comparison expressions are space sensitive
+- Comparisons allow the use of a single equals sign "=" or double. Note that "=" use require space around it.
 - Built-in sigils (like Whisper) are defined inside the interpreter. However, unlike regular sigils, they can only be invoked inside a sigil due to arg passing restrictions. All built-in sigils can be found at the bottom of this README.
 - Any invokes wrote outside of a sigil, is considered your run code and how you kickstart a program.
     ```
