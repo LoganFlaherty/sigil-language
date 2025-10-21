@@ -3,7 +3,7 @@
 A repo for the sigil language, a signal oriented programming language designed around the idea of signal propagation rather than traditional function calls and control flow. The core premise is that execution is driven by reactive relationships between sources (signal variables) and sigils (a combined idea of a signal, function, and conditional statement).
 
 ## Recent Updates
-- Heavily optimized the interpreter to only be ~2.5x slower than raw python.
+- Heavily optimized the interpreter to only be ~2x slower than python equivalent code.
 - Supports the basic data types (int, float, string literal, and bools). No arrays yet, but soon.
 
 ## Design
