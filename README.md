@@ -4,7 +4,7 @@ A repo for the sigil language, a signal oriented programming language designed a
 
 ## Recent Updates
 - Heavily optimized the interpreter to only be ~2.5x slower than raw python.
-- Supports the standard data types (int, float, string literal, and bools)
+- Supports the basic data types (int, float, string literal, and bools). No arrays yet, but soon.
 
 ## Design
 Syntax:
