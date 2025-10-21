@@ -5,13 +5,13 @@ import time
 
 ## Classes
 
-class SrcDecl:
+class Source:
     def __init__(self, name, value):
         self.name = name
         self.value = value
         self.sig_deps = [] # All sigils dependent on this source
 
-class SigilDecl:
+class Sigil:
     def __init__(self, name, condition_expr, body, src_deps):
         self.name = name
         self.condition_expr = condition_expr
@@ -34,10 +34,9 @@ class BuiltInSigil:
         if not self.in_sigil:
             raise Exception("Pulse has nothing to queue.")
 
-        if self.in_sigil.condition_expr and self.interp.eval_expr(self.in_sigil.condition_expr, self.in_sigil.src_deps):
+        if self.in_sigil.condition_expr and self.interp.eval_expr(self.in_sigil.condition_expr):
             # Requeue sigil
             self.interp.invoke_queue[0] = self.in_sigil.name
-        
 
 class Interpreter:
     def __init__(self):
@@ -52,17 +51,20 @@ class Interpreter:
             "Pulse" : BuiltInSigil("Pulse", "pulse", self)
         }
 
+        self.src_cache = {}
         self.invoke_queue = []
         self.runtime_chain = []
         self.line_i = 0
 
     def parse(self, program):
-        lines = program.splitlines()
-        while self.line_i < len(lines):
+        lines = program.split("\n")
+        lines_len = len(lines)
+        while self.line_i < lines_len:
             line = lines[self.line_i]
-            
-            # Skip empty and comment only line
-            if not line.strip() or line.strip().startswith("#"):
+
+            # Skip empty lines and comments
+            is_line = line.lstrip()
+            if not is_line or is_line.startswith("#"):
                 self.line_i += 1
                 continue
             
@@ -101,19 +103,20 @@ class Interpreter:
             # Extract dependencies in order of appearance from condition_expr
             for dep in condition_expr.split():
                 dep = self.global_table.get(dep)
-                if isinstance(dep, SrcDecl) and dep.name not in src_deps:
+                if isinstance(dep, Source) and dep.name not in src_deps:
                     src_deps.append(dep.name)
                     dep.sig_deps.append(name)
 
         # Collect body
         body = []
         i = self.line_i + 1
-        while i < len(lines) and lines[i].startswith((" ", "\t")):
+        lines_len = len(lines)
+        while i < lines_len and lines[i].startswith((" ", "\t")):
             body.append(lines[i].split("#", 1)[0].strip())
             i += 1
         
         # Finish construct
-        self.global_table[name] = SigilDecl(name, condition_expr, body, src_deps)
+        self.global_table[name] = Sigil(name, condition_expr, body, src_deps)
         i -= 1
         self.line_i = i
 
@@ -127,7 +130,8 @@ class Interpreter:
         else:
             val = None
         
-        self.global_table[name] = SrcDecl(name, val)
+        self.global_table[name] = Source(name, val)
+        self.src_cache[name] = val
 
     def queue_invokes(self, _, line, sigil = None):
         targets = line.split(",")
@@ -138,7 +142,7 @@ class Interpreter:
                 continue
 
             node = self.global_table.get(target)
-            if isinstance(node, (SigilDecl, SrcDecl)):
+            if isinstance(node, (Sigil, Source)):
                 self.invoke_queue.append(node.name)
             elif isinstance(node, BuiltInSigil):
                 if sigil:
@@ -154,14 +158,14 @@ class Interpreter:
             target = self.invoke_queue.pop(0)
             self.runtime_chain.append(target)
             node = self.global_table.get(target)
-            if isinstance(node, SrcDecl):
+            if isinstance(node, Source):
                 # Invoke all dependent sigils
                 for sig_dep in node.sig_deps:
                     sigil = self.global_table[sig_dep]
-                    if sigil.condition_expr and self.eval_expr(sigil.condition_expr, sigil.src_deps):
+                    if sigil.condition_expr and self.eval_expr(sigil.condition_expr):
                         self.runtime_chain.append(sigil.name)
                         self.execute_sigil(sigil)
-            elif isinstance(node, SigilDecl):
+            elif isinstance(node, Sigil):
                 self.execute_sigil(node)
             elif isinstance(node, BuiltInSigil):
                 args = []
@@ -184,30 +188,18 @@ class Interpreter:
 
                 # Check if src exists before assigning
                 node = self.global_table.get(src)
-                if isinstance(node, SrcDecl):
+                if isinstance(node, Source):
                     value = self.eval_expr(expr)
                     node.value = value
+                    self.src_cache[node.name] = value
                 else:
                     raise Exception(f"Attempted to assign to invalid object '{node.name}'.")
             else:
                 raise Exception(f"Invalid statement in sigil '{sigil.name}': {line}")
 
-    def eval_expr(self, expr, src_deps = None):
-        # Build local cache
-        expr_cache = {}
-        if src_deps:
-            for dep in src_deps:
-                expr_cache[dep] = self.global_table.get(dep).value
-        else:
-            expr_cleaned = expr.replace("(", " ").replace(")", " ").replace("+", " ").replace("-", " ").replace("*", " ").replace("/", " ")
-            for e in expr_cleaned.split():
-                e = self.global_table.get(e)
-                if isinstance(e, SrcDecl):
-                    expr_cache[e.name] = e.value
-        
-        # Evaluate with locals
+    def eval_expr(self, expr):
         try:
-            return eval(expr, {"__builtins__": None}, expr_cache)
+            return eval(expr, {"__builtins__": None}, self.src_cache)
         except Exception as e:
             raise Exception(f"Error evaluating expression '{expr}': {e}")
 
