@@ -1,7 +1,4 @@
-import os
-import sys
-import time
-
+### Interpreter for sigil lanaguage
 
 ## Classes
 
@@ -19,10 +16,10 @@ class Sigil:
         self.src_deps = src_deps # All sources it dependents on in it's conditional
 
 class BuiltInSigil:
-    def __init__(self, name, func, interp):
+    def __init__(self, name, func, inter):
         self.name = name
         self.func = getattr(self, func)
-        self.interp = interp
+        self.inter = inter
         self.in_sigil = None
 
     # Prints to stdout
@@ -34,9 +31,9 @@ class BuiltInSigil:
         if not self.in_sigil:
             raise Exception("Pulse has nothing to queue.")
 
-        if self.in_sigil.condition_expr and self.interp.eval_expr(self.in_sigil.condition_expr):
+        if self.in_sigil.condition_expr and self.inter.eval_expr(self.in_sigil.condition_expr):
             # Requeue sigil
-            self.interp.invoke_queue[0] = self.in_sigil.name
+            self.inter.invoke_queue[0] = self.in_sigil.name
 
 class Interpreter:
     def __init__(self):
@@ -226,37 +223,3 @@ class Interpreter:
             pass
 
         raise Exception(f"{val} is not a valid value.")
-
-
-## Run Interpreter
-
-args = len(sys.argv)
-if args < 2:
-    raise Exception("File path not passed.")
-
-path = sys.argv[1]
-if os.path.exists(path):
-    with open(path, 'r') as file:
-        file = file.read()
-
-    start_time = time.perf_counter()
-    intr = Interpreter()
-    intr.parse(file)
-    intr.invoke()
-    end_time = time.perf_counter()
-    
-else:
-    raise Exception(f"'{path}' does not exist.")
-
-i = 0
-while i < args:
-    if i < 2:
-        pass
-    elif sys.argv[i] == "c":
-        print(f"Runtime chain: {intr.runtime_chain}")
-    elif sys.argv[i] == "t":
-        elapsed_time = end_time - start_time
-        print(f"Execution time: {elapsed_time:.4f} seconds")
-    else:
-        raise Warning(f"{sys.argv[i]} is not a valid arg.")
-    i += 1
