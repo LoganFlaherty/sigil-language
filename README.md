@@ -1,6 +1,6 @@
 # Sigil
 ## Overview
-A repo branch for the prototype of the Sigil language, a signal based scripting language designed around the idea of signal propagation rather than traditional function calls and control flow. The core premise is that execution is all top-level and driven by the reactive relationships between sources (signal variables) and sigils (a combined idea of a signal, function, and conditional statement).
+A repo branch for the prototype of the Sigil language, an event driven scripting language. The core premise is that execution is all top-level and driven by the reactive relationships between sources (signal variables) and sigils (a combined idea of a signal, function, and conditional statement).
 
 ## Recent Updates
 - Heavily optimized the interpreter to only be ~2x slower than python equivalent code.
