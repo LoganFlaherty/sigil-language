@@ -1,9 +1,0 @@
-src h : "hello world"
-
-sigil HelloWorld ? h:
-    invoke Whisper
-
-invoke h
-
-# Output: hello world
-# Runtime chain: ['h', 'HelloWorld', 'Whisper']
