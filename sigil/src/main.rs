@@ -124,8 +124,7 @@ fn parse_value(val: &str) -> Value {
     }
 }
 
-fn construct_src(_: &Vec<&str>, line: &str, _: Option<&Sigil>, global_table: &mut HashMap<String, Structure>,
-    src_cache: &mut HashMapContext<DefaultNumericTypes>, _: &mut VecDeque<String>, _: &mut u32) {
+fn construct_src(line: &str, global_table: &mut HashMap<String, Structure>, src_cache: &mut HashMapContext<DefaultNumericTypes>) {
     if let Some((mut name, mut val)) = line.split_once(":") {
         name = name.trim();
         val = val.trim();
@@ -135,8 +134,7 @@ fn construct_src(_: &Vec<&str>, line: &str, _: Option<&Sigil>, global_table: &mu
     }
 }
 
-fn construct_sigil(lines: &Vec<&str>, line: &str, _: Option<&Sigil>, global_table: &mut HashMap<String, Structure>,
-    src_cache: &mut HashMapContext<DefaultNumericTypes>, _: &mut VecDeque<String>, li: &mut u32) {
+fn construct_sigil(lines: &Vec<&str>, line: &str, global_table: &mut HashMap<String, Structure>, src_cache: &mut HashMapContext<DefaultNumericTypes>, li: &mut u32) {
     // Extract name
     let sigil_header: Vec<&str> = line.split(&[':', '?']).collect();
     let name: &str = sigil_header[0].trim();
@@ -201,8 +199,7 @@ fn construct_sigil(lines: &Vec<&str>, line: &str, _: Option<&Sigil>, global_tabl
 
 }
 
-fn construct_queue(_: &Vec<&str>, line: &str, sigil: Option<&Sigil>, global_table: &mut HashMap<String, Structure>,
-    _: &mut HashMapContext<DefaultNumericTypes>, queue: &mut VecDeque<String>, _: &mut u32) {
+fn construct_queue(line: &str, sigil: Option<&Sigil>, global_table: &mut HashMap<String, Structure>, queue: &mut VecDeque<String>) {
     let targets: Vec<&str> = line.split(",").collect();
     for target in targets {
         let cleaned_target = target.trim();
@@ -235,14 +232,12 @@ fn construct_queue(_: &Vec<&str>, line: &str, sigil: Option<&Sigil>, global_tabl
     }
 }
 
-fn invoke_sigil(keyword_table: &HashMap<String, fn(lines: &Vec<&str>, line: &str, sigil: Option<&Sigil>, global_table: &mut HashMap<String, Structure>, 
-    src_cache: &mut HashMapContext<DefaultNumericTypes>, queue: &mut VecDeque<String>, li: &mut u32)>, sigil: &Sigil,
-    global_table: &mut HashMap<String, Structure>, src_cache: &mut HashMapContext<DefaultNumericTypes>, queue: &mut VecDeque<String>, li: &mut u32) {
+fn invoke_sigil(sigil: &Sigil, global_table: &mut HashMap<String, Structure>, src_cache: &mut HashMapContext<DefaultNumericTypes>, queue: &mut VecDeque<String>) {
     for line in &sigil.body {
         let line_split: Vec<&str> = line.split_whitespace().collect();
         let key = line_split[0].trim();
         if key == "invoke" {
-            keyword_table[key](&line_split, line_split[1..].join(" ").trim(), Some(sigil), global_table, src_cache, queue, li);
+            construct_queue(line_split[1..].join(" ").trim(), Some(sigil), global_table, queue);
         }
         else if line_split[1].trim() == ":" {
             // Check if src exists before assigning
@@ -268,18 +263,17 @@ fn invoke_sigil(keyword_table: &HashMap<String, fn(lines: &Vec<&str>, line: &str
     }
 }
 
-fn parse(program: String, keyword_table: &HashMap<String, fn(lines: &Vec<&str>, line: &str, sigil: Option<&Sigil>, global_table: &mut HashMap<String, Structure>, 
-    src_cache: &mut HashMapContext<DefaultNumericTypes>, queue: &mut VecDeque<String>, li: &mut u32)>, global_table: &mut HashMap<String, Structure>, 
-    src_cache: &mut HashMapContext<DefaultNumericTypes>, queue: &mut VecDeque<String>, li: &mut u32) {
+fn parse(program: String, global_table: &mut HashMap<String, Structure>, src_cache: &mut HashMapContext<DefaultNumericTypes>, queue: &mut VecDeque<String>) {
     let lines: Vec<&str> = program.lines().collect();
     let lines_len: usize = lines.len();
-    while *li < lines_len as u32 {
-        let mut line: &str = lines[*li as usize];
+    let mut li: u32 = 0;
+    while li < lines_len as u32 {
+        let mut line: &str = lines[li as usize];
         
         // Skip empty and comments lines
         let is_line: &str = line.trim();
         if is_line.is_empty() || is_line.starts_with("#") {
-            *li += 1;
+            li += 1;
             continue;
         }
 
@@ -288,19 +282,17 @@ fn parse(program: String, keyword_table: &HashMap<String, fn(lines: &Vec<&str>, 
             line = code;
         }
 
-        // Seperate keyword
+        // Seperate keyword and map
         if let Some((key, rest)) = line.split_once(" ") {
             line = rest;
-
-            // Try to map keyword
-            if let Some(func) = keyword_table.get(key) {
-                func(&lines, line, None, global_table, src_cache, queue, li);
-            }
-            else {
-                panic!("{} is an unknown keyword.", key);
+            match key {
+                "src" => construct_src(line, global_table, src_cache),
+                "sigil" => construct_sigil(&lines, line, global_table, src_cache, &mut li),
+                "invoke" => construct_queue(line, None, global_table, queue),
+                _ => panic!("{} is an unknown keyword.", key),
             }
         }
-        *li += 1;
+        li += 1;
     }
 }
 
@@ -316,16 +308,9 @@ fn main() {
     // Setup
     let start: Instant = Instant::now(); // Start benchmark
     let mut global_table: HashMap<String, Structure> = HashMap::new();
-    let mut keyword_table: HashMap<String, fn(lines: &Vec<&str>, line: &str, sigil: Option<&Sigil>, global_table: &mut HashMap<String, Structure>, 
-        src_cache: &mut HashMapContext<DefaultNumericTypes>, queue: &mut VecDeque<String>, li: &mut u32)> = HashMap::new();
     let mut src_cache: HashMapContext<DefaultNumericTypes> = HashMapContext::new();
     let mut queue: VecDeque<String> = VecDeque::new();
     let mut runtime_chain: Vec<String> = Vec::new();
-    let mut li: u32 = 0;
-
-    keyword_table.insert("src".to_string(), construct_src);
-    keyword_table.insert("sigil".to_string(), construct_sigil);
-    keyword_table.insert("invoke".to_string(), construct_queue);
 
     let whisper_sig:BuiltInSigil = BuiltInSigil::new("Whisper".to_string(), BuiltInSigil::whisper);
     global_table.insert("Whisper".to_string(), Structure::BuiltInSigil(whisper_sig));
@@ -333,7 +318,7 @@ fn main() {
     global_table.insert("Pulse".to_string(), Structure::BuiltInSigil(pulse_sig));
 
     // Parse program
-    parse(program, &keyword_table, &mut global_table, &mut src_cache, &mut queue, &mut li);
+    parse(program, &mut global_table, &mut src_cache, &mut queue);
 
     // Queue starts
     while let Some(target) = queue.pop_front() {
@@ -347,7 +332,7 @@ fn main() {
                             match eval_boolean_with_context(&sigil.cond_expr, &src_cache) {
                                 Ok(true) => {
                                     runtime_chain.push(sigil.name.clone());
-                                    invoke_sigil(&keyword_table, &sigil, &mut global_table, &mut src_cache, &mut queue, &mut li);
+                                    invoke_sigil(&sigil, &mut global_table, &mut src_cache, &mut queue);
                                 }
                                 Ok(false) => {}
                                 Err(e) => { panic!("{}", e) }
@@ -356,7 +341,7 @@ fn main() {
                     }
                 }
                 Structure::Sigil(sigil) => {
-                    invoke_sigil(&keyword_table, &sigil, &mut global_table, &mut src_cache, &mut queue, &mut li);
+                    invoke_sigil(&sigil, &mut global_table, &mut src_cache, &mut queue);
                 }
                 Structure::BuiltInSigil(builtin) => {
                     let mut args: Vec<String> = Vec::new();
