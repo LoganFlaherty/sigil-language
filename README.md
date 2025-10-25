@@ -2,7 +2,7 @@
 The Sigil language is a Rust interpreted experimental event driven scripting language that abandons traditional methods of control flow. This is achieved through the core concepts of invokes (event triggers), sources (variables), sigils (a combination of a function and conditional statement), relationships, and a queue.
 
 ## Philosophy
-Sigil aims to simplify flow control and encourage readable logical code.
+Sigil aims to simplify control flow and encourage readable logical code.
 
 ## Execution
 - During parsing, all invokes not within a sigil are put into the queue in order they appear and popped first in first out.
