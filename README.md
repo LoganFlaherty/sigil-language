@@ -1,8 +1,8 @@
 # Sigil
-A repo for the Sigil language, an experimental event driven scripting language, interpreted into Rust, using a event trigger called invoke to dictate flow rather than traditional methods. This is achieved through the core concepts of sources (variables), sigils (a combination of a function and conditional statement), relationships, and a queue.
+The Sigil language is a Rust interpreted experimental event driven scripting language that abandons traditional methods of control flow. This is achieved through the core concepts of invokes (event triggers), sources (variables), sigils (a combination of a function and conditional statement), relationships, and a queue.
 
 ## Philosophy
-Sigil explores what programming feels like when you remove traditional flow control and think in terms of relationships and reactions.
+Sigil aims to simplify flow control and encourage readable logical code.
 
 ## Execution
 - During parsing, all invokes not within a sigil are put into the queue in order they appear and popped first in first out.
@@ -40,10 +40,10 @@ Sigil explores what programming feels like when you remove traditional flow cont
 - Built-in sigils (like Whisper) are defined inside the interpreter. However, unlike regular sigils, they can only be invoked inside a sigil due to arg passing restrictions. All built-in sigils can be found at the bottom of this README.
 
 ## Interpreter
-- Wrote in Rust. Meaning you must have the rust compiler installed.
-- Run cmd within a cargo project: 'cargo run {file path} {optional args}'
-        - Option '-c' prints the runtime chain after execution.
-        - Option '-t' prints the execution time.
+- Wrote in the latest version of Rust. Meaning you must have the latest rust compiler installed https://rust-lang.org/tools/install/.
+- Run cmd within a cargo project: 'cargo run {file path} {optional args}'.
+    - Option '-c' prints the runtime chain after execution.
+    - Option '-t' prints the execution time.
 - Sigil's execution is all top-level.
 
 ## Restrictions
