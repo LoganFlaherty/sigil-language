@@ -1,0 +1,1 @@
+C:\Users\owend\Desktop\sigil-language\sigil\target\debug\sigil.exe: C:\Users\owend\Desktop\sigil-language\sigil\src\errors.rs C:\Users\owend\Desktop\sigil-language\sigil\src\main.rs C:\Users\owend\Desktop\sigil-language\sigil\src\parser.rs
