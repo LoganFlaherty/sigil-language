@@ -1,0 +1,10 @@
+src x : 5
+
+sigil Math ? x:
+    x : (x / 2 + 1) * 6 - 1
+    invoke Whisper
+
+invoke x
+
+# Output: 20
+# Runtime chain: ['x', 'Math', 'Whisper']
