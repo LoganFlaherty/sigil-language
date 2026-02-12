@@ -36,4 +36,4 @@ banish = { git = "https://github.com/LoganFlaherty/banish" }
 ```
 
 ## License
-This project is dual-licensed under **Apache 2.0** and **MIT**.
+This project is dual-licensed under **Apache 2.0** OR **MIT**.
