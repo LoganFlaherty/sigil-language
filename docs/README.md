@@ -66,7 +66,7 @@ fn main() {
           
        @stop
            announce ? {
-               println!("Stopping traffic light simulation...");
+               println!("Stopping traffic lights...");
            }
     }
 }
