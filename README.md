@@ -17,6 +17,9 @@ It allows you to define Phases and Rules that automatically re-evaluate until yo
 - Direct Transitions: Instant state switching using the => @phase syntax. This is a jump, so you do no return to where you were.
 - Scope Isolation: Variables declared in your outer scope are available inside the DSL, making it easy to integrate into existing projects.
 
+## Examples
+docs/README.md
+
 ## Install
 ### With Cargo
 ```
