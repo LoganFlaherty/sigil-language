@@ -1,69 +1,41 @@
-# Sigil
-The Sigil language is a Rust interpreted experimental event driven scripting language that abandons traditional methods of control flow. This is achieved through the core concepts of invokes (event triggers), sources (variables), sigils (a combination of a function and conditional statement), relationships, and a queue.
+## Banish
+Banish is a declarative DSL (Domain Specific Language) for Rust that simplifies complex state machines and rule-based logic.
 
-## Philosophy
-Sigil aims to simplify control flow and encourage readable logical code.
+It allows you to define Phases and Rules that automatically re-evaluate until your logic "settles" (reaches a fixed point) or transitions to a new state. It compiles down to zero-overhead, standard Rust loops and match statements.
 
-## Execution
-- During parsing, all invokes not within a sigil are put into the queue in order they appear and popped first in first out.
-- Sigil bodies are not evaluated till they are invoked.
-- Any invokes within a sigil body are injected next into the queue.
-- Relationships work like this, sigils containing a source in their condition are then tied to it. When a source is invoked, every sigil in a relationship with it is then evaluated in the order they appear.
-- When a sigil is invoked directly, they alone are evaluated.
-- Program ends once the queue is empty.
+## Why Banish?
+- Writing complex state machines in raw Rust often leads to "spaghetti code" full of nested if/else, loop, and match blocks. Banish provides a clean, readable syntax to organize this logic.
+- Fixed-Point Solving: Unlike a standard function that runs top-to-bottom once, a Banish phase loops internally until no more interactions occur. This makes it perfect for layout engines, constraint solvers, or complex game logic.
+- Zero Runtime Overhead: Banish is a procedural macro. It generates standard, optimized Rust code at compile time. There is no interpreter or virtual machine.
+- Safe State Transitions: The => @phase syntax makes flow control explicit and impossible to miss, preventing "fall-through" bugs common in manual state machines.
+- Mix Standard Rust: The body of every rule is just standard Rust code. You don't have to learn a whole new language, just a new structure.
 
-## Syntax
-- Invokes of either a source or a sigil are the main control flow mechanism.
-    ```
-    invoke x
-    ```
-    - Additionally, you can invoke mutiple times on a single line. Both inside and out of a sigil.
-        ```
-        invoke Pulse, Whisper
-        ```
-- Sources are dynamic variables. They are declared outside of sigils, typically near the top of the file.
-    ```
-    src x
-    ```
-    - Changing a source value doesn’t implicitly trigger a reaction. This is to provide more control and predictability.
-- Sigils "sigil {name}" are rule like structures that define when something should happen through a conditional statement started with "?", and if it evaluates true then it moves on to the body (after ":", newlined, and indented).
-    ```
-    sigil Print ? x != "" and y != "":
-        invoke Whisper
-    ```
-    - Optionally you can define a sigil with no conditional, but it makes it only directly invokable.
-- Assignments use a colon ":".
-    ```
-    src x : 7
-    ```
-- Comparisons allow the use of a single equals sign "=" or double. Note that "=" use require space around it. Also the operators "and" and "or" are supported. 
-- Built-in sigils (like Whisper) are defined inside the interpreter. However, unlike regular sigils, they can only be invoked inside a sigil due to arg passing restrictions. All built-in sigils can be found at the bottom of this README.
+## Features
+- @Phases: Group logic into distinct states (e.g., @init, @process, @report).
+- ? Guards: Rules that only execute when a condition is met (e.g., increment ? tick < 120).
+- Convergence Loops: If a rule modifies state, the phase automatically re-evaluates to ensure consistency.
+- Direct Transitions: Instant state switching using the => @phase syntax. This is a jump, so you do no return to where you were.
+- Scope Isolation: Variables declared in your outer scope are available inside the DSL, making it easy to integrate into existing projects.
 
-## Interpreter
-- Wrote in the latest version of Rust. Meaning you must have the latest rust compiler installed https://rust-lang.org/tools/install/.
-- Run cmd within a cargo project: 'cargo run {file path} {optional args}'.
-    - Option '-c' prints the runtime chain after execution.
-    - Option '-t' prints the execution time.
-- Sigil's execution is all top-level.
+## Install
+### With Cargo
+'''
+cargo install banish
+'''
 
-## Restrictions
-- Cannot declare new sources inside a sigil. Declare it right over it if it's meant to only be used there. It isn't supported directly, but more for readability.
-- Cannot declare a sigil within a sigil.
-- Cannot assign a sigil to a source.
-- Cannot directly pass args to a built-in sigil.
+### With TOML
+'''
+[dependencies]
+banish = "1.0.0"
+'''
 
-## Built-in Sigils
-- Whisper: a print to standard output that implicitly takes in the args within conditional statement.
-    ```
-    # Prints x and y
-    sigil Print ? x and y:
-        invoke Whisper
-    ```
-- Pulse: Requeues the sigil up to the Pulse invoke, until the conditional statement fails, then the rest of the body is executed.
-    ```
-    # Will loop until x equals 5, then Whisper will print x
-    sigil Loop ? x < 5:
-        x : x + 1
-        invoke Pulse
-        invoke Whisper
-    ```
+### With Github in TOML
+'''
+[dependencies]
+banish = { git = "https://github.com/LoganFlaherty/banish" }
+'''
+
+## License
+This project is dual-licensed under **Apache 2.0** and **MIT**.
+
+`SPDX-License-Identifier: Apache-2.0 OR MIT`
