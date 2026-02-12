@@ -18,7 +18,7 @@ It allows you to define Phases and Rules that automatically re-evaluate until yo
 - Scope Isolation: Variables declared in your outer scope are available inside the DSL, making it easy to integrate into existing projects.
 
 ## Examples
-docs/README.md
+[docs/README.md](https://github.com/LoganFlaherty/banish/blob/main/docs/README.md)
 
 ## Install
 ### With Cargo
