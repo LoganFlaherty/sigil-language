@@ -19,23 +19,21 @@ It allows you to define Phases and Rules that automatically re-evaluate until yo
 
 ## Install
 ### With Cargo
-'''
+```
 cargo install banish
-'''
+```
 
 ### With TOML
-'''
+```
 [dependencies]
 banish = "1.0.0"
-'''
+```
 
 ### With Github in TOML
-'''
+```
 [dependencies]
 banish = { git = "https://github.com/LoganFlaherty/banish" }
-'''
+```
 
 ## License
 This project is dual-licensed under **Apache 2.0** and **MIT**.
-
-`SPDX-License-Identifier: Apache-2.0 OR MIT`
