@@ -20,7 +20,7 @@ It allows you to define Phases and Rules that automatically re-evaluate until yo
 ## Install
 ### With Cargo
 ```
-cargo install banish
+cargo add banish
 ```
 
 ### With TOML
