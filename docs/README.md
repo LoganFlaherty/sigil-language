@@ -3,10 +3,10 @@ As stated before Banish is an excellent DSL to write state-machines or have clea
 Given Banish's small size, this guide will be realatively short, but feel free to post in Discussions if you have any input or questions.
 
 ## Syntax
-- **@phase**: Defines a state. States run from top to bottom, and repeat until no rules trigger or a phase jump occurs.
-- **rule ? condition**: Runs logic if the condition is true.
-- **rule?**: Without a condition, runs exactly once per phase entry.
-- **=> @next**: Transitions immediately to another phase, but is a top-level statement within a rule block only.
+- **@phase**: Defines a state. Phases run from top to bottom evaluating rules in declaration order, and repeat until no rules trigger or a phase jump occurs.
+- **rule ? condition {}**: Runs logic if the condition is true.
+- **rule? {}**: Without a condition, runs exactly once per phase entry.
+- **=> @next;**: Transitions immediately to another phase, but is a top-level statement within a rule block only.
 
 ## Examples
 ### Hello World
