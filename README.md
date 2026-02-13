@@ -1,13 +1,13 @@
 ## Banish
-Banish is a declarative DSL (Domain Specific Language) for Rust that simplifies complex state machines and rule-based logic.
+Banish is a declarative DSL for Rust that simplifies complex state machines and rule-based logic.
 
-It allows you to define Phases and Rules that automatically re-evaluate until your logic "settles" (reaches a fixed point) or transitions to a new state. It compiles down to zero-overhead, standard Rust loops and match statements.
+It allows you to define Phases and Rules that automatically re-evaluate until your logic reaches a fixed point or transitions to a new state. It compiles down to zero-overhead, standard Rust loops and match statements.
 
 ## Why Banish?
 - Writing complex state machines in raw Rust often leads to "spaghetti code" full of nested if/else, loop, and match blocks. Banish provides a clean, readable syntax to organize this logic.
 - Fixed-Point Solving: Unlike a standard function that runs top-to-bottom once, a Banish phase loops internally until no more interactions occur. This makes it perfect for layout engines, constraint solvers, or complex game logic.
 - Zero Runtime Overhead: Banish is a procedural macro. It generates standard, optimized Rust code at compile time. There is no interpreter or virtual machine.
-- Safe State Transitions: The => @phase syntax makes flow control explicit and impossible to miss, preventing "fall-through" bugs common in manual state machines.
+- Safe State Transitions: The => @phase syntax makes flow control explicit and impossible to miss.
 - Mix Standard Rust: The body of every rule is just standard Rust code. You don't have to learn a whole new language, just a new structure.
 
 ## Features
