@@ -3,10 +3,12 @@ As stated before Banish is an excellent DSL to write state-machines or have clea
 Given Banish's small size, this guide will be realatively short, but feel free to post in Discussions if you have any input or questions.
 
 ## Syntax
-- **@phase**: Defines a state. Phases run from top to bottom evaluating rules in declaration order, and repeat until no rules trigger or a phase jump occurs.
+- **@state**: Defines a state. States run from top to bottom, and repeat until no rules trigger or a state jump occurs.
 - **rule ? condition {}**: Runs logic if the condition is true.
-- **rule? {}**: Without a condition, runs exactly once per phase entry.
-- **=> @next;**: Transitions immediately to another phase, but is a top-level statement within a rule block only.
+- **rule ? {}**: Without a condition, runs exactly once per state entry.
+- **=> @state;**: Transitions immediately to another state, but is a top-level statement within a rule block only.
+- **return value;**: Immediately exit banish and return a value, but is a top-level statement within a rule block only.
+Nested returns work like standard rust.
 
 ## Examples
 ### Hello World
@@ -63,11 +65,8 @@ fn main() {
            reset ? ticks == 10 && loop_count < 2 {
                => @red;
            }
-          
-       @stop
-           announce ? {
-               println!("Stopping traffic lights...");
-           }
+
+           stop ? loop_count == 2 { return; }
     }
 }
 ```
