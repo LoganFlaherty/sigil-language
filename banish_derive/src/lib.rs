@@ -1,14 +1,15 @@
 //! # Banish
 //!
-//! An easy to use DSL for creating state machines and fixed-point loops in Rust.
-//! It allows you to define "Phases" and "Rules" that interact until they settle or transition.
+//! An easy to use DSL for creating state machines and rules-base logic.
+//! It allows you to define "States" and "Rules" that execute until they reach a fixed point or transition.
 //! This is the macro implementation for the `banish` crate, which provides the public API and user-facing documentation.
 
 use proc_macro;
 use proc_macro2;
 use quote::quote;
 use syn::{
-    Expr, Ident, Result, Stmt, Token, braced, parse::{Parse, ParseStream}, parse_macro_input,
+    Expr, Ident, Result, Stmt, Token, braced,
+    parse::{Parse, ParseStream}, parse_macro_input,
 };
 use core::panic;
 use std::collections::HashSet;
@@ -17,10 +18,10 @@ use std::collections::HashSet;
 //// AST
 
 struct Context {
-    phases: Vec<Phase>,
+    states: Vec<State>,
 }
 
-struct Phase {
+struct State {
     name: Ident,
     rules: Vec<Rule>,
 }
@@ -33,7 +34,8 @@ struct Rule {
 
 enum BanishStmt {
     Rust(Stmt),
-    PhaseJump(Ident),
+    StateTransition(Ident),
+    Return(Expr),
 }
 
 
@@ -41,16 +43,16 @@ enum BanishStmt {
 
 impl Parse for Context {
     fn parse(input: ParseStream) -> Result<Self> {
-        let mut phases: Vec<Phase> = Vec::with_capacity(2);
+        let mut states: Vec<State> = Vec::with_capacity(2);
         while !input.is_empty() {
-            phases.push(input.parse()?);
+            states.push(input.parse()?);
         }
 
-        Ok(Context { phases })
+        Ok(Context { states })
     }
 }
 
-impl Parse for Phase {
+impl Parse for State {
     fn parse(input: ParseStream) -> Result<Self> {
         input.parse::<Token![@]>()?;
         let name: Ident = input.parse()?;
@@ -60,7 +62,7 @@ impl Parse for Phase {
             rules.push(input.parse()?);
         }
 
-        Ok(Phase { name, rules })
+        Ok(State { name, rules })
     }
 }
 
@@ -79,9 +81,21 @@ impl Parse for Rule {
             if content.peek(Token![=>]) {
                 content.parse::<Token![=>]>()?;
                 content.parse::<Token![@]>()?;
-                let phase: Ident = content.parse()?;
+                let state: Ident = content.parse()?;
                 content.parse::<Token![;]>()?;
-                body.push(BanishStmt::PhaseJump(phase));
+                body.push(BanishStmt::StateTransition(state));
+            }
+            else if content.peek(Token![return]) {
+                content.parse::<Token![return]>()?;
+                if content.peek(Token![;]) {
+                    content.parse::<Token![;]>()?;
+                    body.push(BanishStmt::Return(syn::parse_quote! { () }));
+                }
+                else {
+                    let expr: Expr = content.parse()?;
+                    content.parse::<Token![;]>()?;
+                    body.push(BanishStmt::Return(expr));
+                    }
             }
             else {
                 let stmt: Stmt = content.parse()?;
@@ -89,11 +103,7 @@ impl Parse for Rule {
             }
         }
 
-        Ok(Rule {
-            name: name,
-            condition,
-            body,
-        })
+        Ok(Rule { name, condition, body })
     }
 }
 
@@ -103,27 +113,31 @@ impl Parse for Rule {
 #[proc_macro]
 pub fn banish(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input: Context = parse_macro_input!(input as Context);
-    if let Err(err) = validate_phase_and_rule_names(&input) {
+    if let Err(err) = validate_state_and_rule_names(&input) {
         return err.to_compile_error().into();
     }
 
-    let phase_blocks = input.phases.iter().enumerate().map(|(index, phase)| {
-        let rules = phase.rules.iter().map(|func| {
+    let state_blocks = input.states.iter().enumerate().map(|(index, state)| {
+        let rules = state.rules.iter().map(|func| {
             let body = func.body.iter().map(|stmt| {
                 match stmt {
                     BanishStmt::Rust(stmt) => quote! { #stmt },
-                    BanishStmt::PhaseJump(jump) => {
-                        let target: usize = input.phases
+                    BanishStmt::StateTransition(transition) => {
+                        let target: usize = input.states
                             .iter()
-                            .position(|phase| &phase.name == jump)
-                            .unwrap_or_else(|| { panic!("Invalid phase jump target {}", jump); });
+                            .position(|state| &state.name == transition)
+                            .unwrap_or_else(|| { panic!("Invalid state transition target {}", transition); });
                         
                         let target: syn::Index = syn::Index::from(target);
                         quote! {
-                            __current_phase = #target;
+                            __current_state = #target;
                             continue 'banish_main;
                         }
                     },
+                    BanishStmt::Return(expr) => quote! {
+                        __banish_return = Some(#expr);
+                        break 'banish_main;
+                    }
                 }
             });
             
@@ -137,18 +151,19 @@ pub fn banish(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     }
                 }
             }
-            // If a rule is conditionless, we want to run it only once per phase.
+            // If a rule is conditionless, we want to run it only once per state.
             else {
                 quote! {
                     if __first_iteration {
+                        __interaction = true;
                         #(#body)*
                     }
                 }
             }
         });
 
-        // Phase loop
-        // If no interactions occur in a full pass, exit phase
+        // State loop
+        // If no interactions occur in a full pass, exit state
         let index: syn::Index = syn::Index::from(index);
         quote! {
             #index => {
@@ -162,45 +177,48 @@ pub fn banish(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     }
                 }
 
-                __current_phase += 1;
+                __current_state += 1;
             }
         }
     });
 
     let expanded: proc_macro2::TokenStream = quote! {{
-        let mut __current_phase: usize = 0;
+        let mut __banish_return: Option<_> = None;
+        let mut __current_state: usize = 0;
         
         'banish_main: loop {
-            match __current_phase {
-                #(#phase_blocks)*
+            match __current_state {
+                #(#state_blocks)*
                 _ => break,
             }
         }
+
+        __banish_return
     }};
     proc_macro::TokenStream::from(expanded)
 }
 
-fn validate_phase_and_rule_names(input: &Context) -> syn::Result<()> {
-    let mut phase_names: HashSet<String> = HashSet::new();
-    for phase in &input.phases {
-        let name: String = phase.name.to_string();
-        if !phase_names.insert(name.clone()) {
+fn validate_state_and_rule_names(input: &Context) -> syn::Result<()> {
+    let mut state_names: HashSet<String> = HashSet::new();
+    for state in &input.states {
+        let name: String = state.name.to_string();
+        if !state_names.insert(name.clone()) {
             return Err(syn::Error::new(
-                phase.name.span(),
-                format!("Duplicate phase name '{}'", name),
+                state.name.span(),
+                format!("Duplicate state name '{}'", name),
             ));
         }
 
         let mut rule_names: HashSet<String> = HashSet::new();
-        for rule in &phase.rules {
+        for rule in &state.rules {
             let name: String = rule.name.to_string();
 
             if !rule_names.insert(name.clone()) {
                 return Err(syn::Error::new(
                     rule.name.span(),
                     format!(
-                        "Duplicate rule '{}' in phase '{}'",
-                        name, phase.name
+                        "Duplicate rule '{}' in state '{}'",
+                        name, state.name
                     ),
                 ));
             }
