@@ -1,14 +1,16 @@
 //! # Banish
 //!
-//! An easy to use DSL for creating state machines and fixed-point loops in Rust.
-//! It allows you to define "Phases" and "Rules" that interact until they settle or transition.
+//! An easy to use declarative DSL for creating state machines and rules-base logic. 
+//! It allows you to define "States" and "Rules" that execute until they reach a fixed point or transition.
 //!
 //! ## Syntax
 //!
-//! - **@phase**: Defines a state. States run from top to bottom, and repeat until no rules trigger or a phase jump occurs.
-//! - **rule ? condition**: Runs logic if the condition is true.
-//! - **rule?**: Without a condition, runs exactly once per phase entry.
-//! - **=> @next**: Transitions immediately to another phase, but is a top-level statement within a rule block only.
+//! - **@state** : Defines a state. States run from top to bottom, and repeat until no rules trigger or a state jump occurs.
+//! - **rule ? condition {}** : Runs logic if the condition is true.
+//! - **rule ? {}** : Without a condition, runs exactly once per state entry.
+//! - **=> @state;** : Transitions immediately to another state, but is a top-level statement within a rule block only.
+//! - **return value;** : Immediately exit banish and return a value, but is a top-level statement within a rule block only.
+//! Nested returns work like standard rust.
 //!
 //! ## Example
 //!
@@ -51,11 +53,8 @@
 //!             reset ? ticks == 10 && loop_count < 2 {
 //!                 => @red;
 //!             }
-//!            
-//!         @stop
-//!             announce ? {
-//!                 println!("Stopping traffic light simulation...");
-//!             }
+//! 
+//!             stop ? loop_count == 2 { return; }
 //!     }
 //! }
 //! ```
