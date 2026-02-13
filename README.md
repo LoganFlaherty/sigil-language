@@ -13,7 +13,7 @@ It allows you to define Phases and Rules that automatically re-evaluate until yo
 ## Features
 - @Phases: Group logic into distinct states (e.g., @init, @process, @report).
 - ? Guards: Rules that only execute when a condition is met (e.g., increment ? tick < 120).
-- Convergence Loops: If a rule modifies state, the phase automatically re-evaluates to ensure consistency.
+- Convergence Loops: If a rule is triggered, the phase automatically re-evaluates to ensure consistency.
 - Direct Transitions: Instant state switching using the => @phase syntax. This is a jump, so you do no return to where you were.
 - Scope Isolation: Variables declared in your outer scope are available inside the DSL, making it easy to integrate into existing projects.
 
