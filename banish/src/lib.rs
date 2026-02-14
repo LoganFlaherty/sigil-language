@@ -1,16 +1,14 @@
 //! # Banish
-//!
 //! An easy to use declarative DSL for creating state machines and rules-base logic. 
 //! It allows you to define "States" and "Rules" that execute until they reach a fixed point or transition.
 //!
 //! ## Syntax
-//!
-//! - **@state** : Defines a state. States run from top to bottom, and repeat until no rules trigger or a state jump occurs.
-//! - **rule ? condition {}** : Runs logic if the condition is true.
-//! - **rule ? {}** : Without a condition, runs exactly once per state entry.
-//! - **=> @state;** : Transitions immediately to another state, but is a top-level statement within a rule block only.
-//! - **return value;** : Immediately exit banish and return a value, but is a top-level statement within a rule block only.
-//! Nested returns work like standard rust.
+//! - **@state** : Defines a state that loops until no rules trigger or a state transition. States execute from top to bottom.
+//! - **rule ? condition {}** : Defines a rule. Executes if its condition is true. Rules execute from top to bottom.
+//! - **!? {}** : Defines an else clause after the closing brace of a rule with a condition.
+//! - **rule ? {}** : A rule without a condition. Executes exactly once per state entry. Cannot have an else clause.
+//! - **=> @state;** : Transitions immediately to another state, but is a rule top-level statement only.
+//! - **return value;** : Immediately exit banish and return a value if passed.
 //!
 //! ## Example
 //!
