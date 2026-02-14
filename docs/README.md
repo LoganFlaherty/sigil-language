@@ -108,6 +108,10 @@ fn main() {
                 println!("Dragon breathes fire for {} dmg! (Player HP: {})", damage, player_hp);
             }
 
+            halfway ? player_hp <= 10 && dragon_hp <= 25 {
+                println!("\nThe battle is getting intense!\n");
+            } !? { println!("\nThe dragon is getting weak!\n"); } // Else clause
+
             check_loss ? player_hp <= 0 {
                 return "Defeat...";
             }
