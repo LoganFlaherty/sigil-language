@@ -4,8 +4,9 @@ Given Banish's small size, this guide will be realatively short, but feel free t
 
 ## Syntax
 - **@state** : Defines a state. States run from top to bottom, and repeat until no rules trigger or a state jump occurs.
-- **rule ? condition {}** : Runs logic if the condition is true. Rules also run from top to bottom.
-- **rule ? {}** : Without a condition, runs exactly once per state entry.
+- **rule ? condition {}** : Defines a rule. Runs logic if the condition is true. Rules also run from top to bottom.
+- **!? {}** : Defines an else clause after the closing brace of a rule with a condition.
+- **rule ? {}** : A rule without a condition, runs exactly once per state entry. Cannot have an else clause.
 - **=> @state;** : Transitions immediately to another state, but is a top-level statement within a rule block only.
 - **return value;** : Immediately exit banish and return a value, but is a top-level statement within a rule block only.
 Nested returns work like standard rust.
@@ -72,7 +73,7 @@ fn main() {
 ```
 
 ### Dragon Fight
-This example demostrates a little bit more complex logic such as early returning with a value to be used later and using an external library within Banish.
+This example demostrates a little bit more complex logic such as early returning with a value to be used later, using an external library within Banish, and else clauses.
 ```rust
 use banish::banish;
 use rand::prelude::*;
