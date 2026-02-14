@@ -1,10 +1,10 @@
 ## Introduction
-As stated before Banish is an excellent DSL to write state-machines or have clean iterative logic without a nested mess, and the best part is that you can still interact with Rust in and out of it. 
+As stated before Banish is an excellent DSL to write state-machines or have easy to read conditional logic. 
 Given Banish's small size, this guide will be realatively short, but feel free to post in Discussions if you have any input or questions.
 
 ## Syntax
 - **@state** : Defines a state. States run from top to bottom, and repeat until no rules trigger or a state jump occurs.
-- **rule ? condition {}** : Runs logic if the condition is true.
+- **rule ? condition {}** : Runs logic if the condition is true. Rules also run from top to bottom.
 - **rule ? {}** : Without a condition, runs exactly once per state entry.
 - **=> @state;** : Transitions immediately to another state, but is a top-level statement within a rule block only.
 - **return value;** : Immediately exit banish and return a value, but is a top-level statement within a rule block only.
@@ -67,6 +67,60 @@ fn main() {
            }
 
            stop ? loop_count == 2 { return; }
+    }
+}
+```
+
+### Dragon Fight
+This example demostrates a little bit more complex logic such as early returning with a value to be used later and using an external library within Banish.
+```rust
+use banish::banish;
+use rand::prelude::*;
+
+fn main() {
+    let mut rng = rand::rng();
+    let mut player_hp = 20;
+    let mut dragon_hp = 50;
+    
+    println!("BATTLE START");
+
+    let result: Option<&str> = banish! {
+        @PlayerTurn
+            // Conditionless Rule: Player attacks dragon
+            attack ? {
+                let damage = rng.random_range(5..15); // Using external lib!
+                dragon_hp -= damage;
+                println!("You hit the dragon for {} dmg! (Dragon HP: {})", damage, dragon_hp);
+            }
+
+            check_win ? dragon_hp <= 0 {
+                return "Victory!"; // Early exit with value
+            }
+
+            end_turn ? {
+                => @DragonTurn; // Explicit transition else player just keeps attacking forever
+            }
+
+        @DragonTurn
+            attack ? {
+                let damage = rng.random_range(2..20);
+                player_hp -= damage;
+                println!("Dragon breathes fire for {} dmg! (Player HP: {})", damage, player_hp);
+            }
+
+            check_loss ? player_hp <= 0 {
+                return "Defeat...";
+            }
+
+            end_turn ? {
+                => @PlayerTurn;
+            }
+    };
+
+    // Handle the returned result
+    match result {
+        Some(msg) => println!("GAME OVER: {}", msg),
+        None => println!("Game interrupted."),
     }
 }
 ```
