@@ -28,7 +28,7 @@ cargo add banish
 ### With TOML
 ```
 [dependencies]
-banish = "1.1.1"
+banish = "1.1.2"
 ```
 
 ### With Github in TOML
