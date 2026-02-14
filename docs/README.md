@@ -3,13 +3,12 @@ As stated before Banish is an excellent DSL to write state-machines or have easy
 Given Banish's small size, this guide will be realatively short, but feel free to post in Discussions if you have any input or questions.
 
 ## Syntax
-- **@state** : Defines a state. States run from top to bottom, and repeat until no rules trigger or a state jump occurs.
-- **rule ? condition {}** : Defines a rule. Runs logic if the condition is true. Rules also run from top to bottom.
+- **@state** : Defines a state that loops until no rules trigger or a state transition. States execute from top to bottom.
+- **rule ? condition {}** : Defines a rule. Executes if its condition is true. Rules execute from top to bottom.
 - **!? {}** : Defines an else clause after the closing brace of a rule with a condition.
-- **rule ? {}** : A rule without a condition, runs exactly once per state entry. Cannot have an else clause.
-- **=> @state;** : Transitions immediately to another state, but is a top-level statement within a rule block only.
-- **return value;** : Immediately exit banish and return a value, but is a top-level statement within a rule block only.
-Nested returns work like standard rust.
+- **rule ? {}** : A rule without a condition. Executes exactly once per state entry. Cannot have an else clause.
+- **=> @state;** : Transitions immediately to another state, but is a rule top-level statement only.
+- **return value;** : Immediately exit banish and return a value if passed.
 
 ## Examples
 ### Hello World
@@ -18,9 +17,12 @@ Naturally, have to show the classics.
 use banish::banish;
 
 fn main() {
-  banish! {
+    banish! {
         @hello
-            print? { println!("Hello, world!"); }
+            print? {
+              println!("Hello, world!");
+              return;
+            }
     }
 }
 ```
@@ -85,7 +87,7 @@ fn main() {
     
     println!("BATTLE START");
 
-    let result: Option<&str> = banish! {
+    let result: &str = banish! {
         @player_turn
             // Conditionless Rule: Player attacks dragon
             attack ? {
@@ -123,9 +125,6 @@ fn main() {
     };
 
     // Handle the returned result
-    match result {
-        Some(msg) => println!("GAME OVER: {}", msg),
-        None => println!("Game interrupted."),
-    }
+    println!("GAME OVER: {}", result)
 }
 ```
