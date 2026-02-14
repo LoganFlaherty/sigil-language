@@ -5,7 +5,7 @@ Given Banish's small size, this guide will be realatively short, but feel free t
 ## Syntax
 - **@state** : Defines a state that loops until no rules trigger or a state transition. States execute from top to bottom.
 - **rule ? condition {}** : Defines a rule. Executes if its condition is true. Rules execute from top to bottom.
-- **!? {}** : Defines an else clause after the closing brace of a rule with a condition.
+- **!? {}** : Defines an else clause after the closing brace of a rule with a condition. Does not retrigger the state.
 - **rule ? {}** : A rule without a condition. Executes exactly once per state entry. Cannot have an else clause.
 - **=> @state;** : Transitions immediately to another state, but is a rule top-level statement only.
 - **return value;** : Immediately exit banish and return a value if passed.
