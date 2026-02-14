@@ -85,7 +85,7 @@ fn main() {
     println!("BATTLE START");
 
     let result: Option<&str> = banish! {
-        @PlayerTurn
+        @player_turn
             // Conditionless Rule: Player attacks dragon
             attack ? {
                 let damage = rng.random_range(5..15); // Using external lib!
@@ -98,10 +98,10 @@ fn main() {
             }
 
             end_turn ? {
-                => @DragonTurn; // Explicit transition else player just keeps attacking forever
+                => @dragon_turn; // Explicit transition else player just keeps attacking forever
             }
 
-        @DragonTurn
+        @dragon_turn
             attack ? {
                 let damage = rng.random_range(2..20);
                 player_hp -= damage;
@@ -113,7 +113,7 @@ fn main() {
             }
 
             end_turn ? {
-                => @PlayerTurn;
+                => @player_turn;
             }
     };
 
