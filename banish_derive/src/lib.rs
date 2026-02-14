@@ -34,7 +34,6 @@ struct Rule {
 enum BanishStmt {
     Rust(Stmt),
     StateTransition(Ident),
-    Return(Expr),
 }
 
 
@@ -127,7 +126,6 @@ pub fn banish(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                             __interaction = true;
                             #(#body)*
                         } else {
-                            __interaction = true;
                             #(#else_body)*
                         }
                     }
@@ -158,9 +156,9 @@ pub fn banish(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             #index => {
                 let mut __first_iteration = true;
                 loop {
-                    let mut __interaction = false;
+                    __interaction = false;
                     #(#rules)*
-                    __first_iteration = false;
+                    if __first_iteration { __first_iteration = false; }
                     if !__interaction {
                         break;
                     }
@@ -172,17 +170,18 @@ pub fn banish(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     });
 
     let expanded: proc_macro2::TokenStream = quote! {{
-        let mut __banish_return: Option<_> = None;
-        let mut __current_state: usize = 0;
-        
-        'banish_main: loop {
-            match __current_state {
-                #(#state_blocks)*
-                _ => break,
+        (move || {
+            let mut __current_state: usize = 0;
+            let mut __interaction: bool = false;
+            'banish_main: loop {
+                match __current_state {
+                    #(#state_blocks)*
+                    _ => {
+                        panic!("Error: No return in final state");
+                    },
+                }
             }
-        }
-
-        __banish_return
+        })()
     }};
     proc_macro::TokenStream::from(expanded)
 }
@@ -197,18 +196,6 @@ fn parse_rule_block(content: &syn::parse::ParseBuffer) -> Result<Vec<BanishStmt>
             let state: Ident = content.parse()?;
             content.parse::<Token![;]>()?;
             body.push(BanishStmt::StateTransition(state));
-        }
-        else if content.peek(Token![return]) {
-            content.parse::<Token![return]>()?;
-            if content.peek(Token![;]) {
-                content.parse::<Token![;]>()?;
-                body.push(BanishStmt::Return(syn::parse_quote! { () }));
-            }
-            else {
-                let expr: Expr = content.parse()?;
-                content.parse::<Token![;]>()?;
-                body.push(BanishStmt::Return(expr));
-                }
         }
         else {
             let stmt: Stmt = content.parse()?;
@@ -233,10 +220,6 @@ fn generate_stmt(stmt: &BanishStmt, input: &Context) -> proc_macro2::TokenStream
                 __current_state = #target;
                 continue 'banish_main;
             }
-        },
-        BanishStmt::Return(expr) => quote! {
-            __banish_return = Some(#expr);
-            break 'banish_main;
         }
     }
 }
