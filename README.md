@@ -74,5 +74,5 @@ cargo add banish
 ### TOML
 ```
 [dependencies]
-banish = "1.1.3"
+banish = "1.1.4"
 ```
