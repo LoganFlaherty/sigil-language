@@ -128,3 +128,36 @@ fn main() {
     println!("GAME OVER: {}", result)
 }
 ```
+### Find Index
+This example demos a more practical example of how to use Banish.
+```rust
+use banish::banish;
+
+fn main() {
+    let buffer = ["No".to_string(), "hey".to_string()];
+    let target = "hey".to_string();
+    let idx = find_index(&buffer, &target);
+    print!("{:?}", idx)
+}
+
+fn find_index(buffer: &[String], target: &str) -> Option<usize> {
+    let mut idx = 0;
+    banish! {
+        @search
+            // If we reached the end, give up.
+            // This must be first to prevent out-of-bounds panic below.
+            not_found ? idx >= buffer.len() {
+                return None;
+            }
+
+            found ? buffer[idx] == target {
+                return Some(idx);
+            }
+
+            next ? true {
+                idx += 1;
+            }
+            // Rule triggered so we re-evalutate rules in search.
+    }
+}
+```
