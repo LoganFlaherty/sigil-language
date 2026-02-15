@@ -1,8 +1,7 @@
 ## Banish
 [![Crates.io](https://img.shields.io/crates/v/banish.svg)](https://crates.io/crates/banish)
 [![Docs.rs](https://docs.rs/banish/badge.svg)](https://docs.rs/banish)
-[![License](https://img.shields.io/crates/l/banish.svg)](https://github.com/LoganFlaherty/banish/blob/main/LICENSE.Apache-2.0)
-[![License](https://img.shields.io/crates/l/banish.svg)](https://github.com/LoganFlaherty/banish/blob/main/LICENSE.MIT)
+[![License](https://img.shields.io/crates/l/banish.svg)](https://github.com/LoganFlaherty/banish/blob/main/LICENSE)
 
 Banish is a declarative DSL that simplifies complex state machines and rule-based logic.
 
@@ -79,6 +78,3 @@ cargo add banish
 [dependencies]
 banish = "1.1.2"
 ```
-
-## License
-This project is dual-licensed under **Apache 2.0** OR **MIT**.
