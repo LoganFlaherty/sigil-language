@@ -1,6 +1,7 @@
 //! # Banish
-//! An easy to use declarative DSL for creating state machines and rules-base logic. 
-//! It allows you to define "States" and "Rules" that execute until they reach a fixed point or transition.
+//! Banish is a declarative DSL for building rule-driven state machines in Rust. 
+//! It allows you to define states and rules that execute until they reach a stable 
+//! fixed point or trigger transitions, making complex control flow easier to express and reason about.
 //!
 //! ## Syntax
 //! - **@state** : Defines a state that loops until no rules trigger or a state transition. States execute from top to bottom.
@@ -10,7 +11,8 @@
 //! - **=> @state;** : Transitions immediately to another state, but is a rule top-level statement only.
 //! - **return value;** : Immediately exit banish and return a value if passed.
 //!
-//! ## Example
+//! ## Examples
+//! https://github.com/LoganFlaherty/banish/blob/main/docs/README.md
 //!
 //! ```rust
 //! use banish::banish;
@@ -50,9 +52,7 @@
 //!
 //!             reset ? ticks == 10 && loop_count < 2 {
 //!                 => @red;
-//!             }
-//! 
-//!             stop ? loop_count == 2 { return; }
+//!             } !? { return; }
 //!     }
 //! }
 //! ```

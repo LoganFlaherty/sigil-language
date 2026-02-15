@@ -1,8 +1,8 @@
 [package]
 name = "banish"
-version = "1.1.2"
+version = "1.1.4"
 edition = "2024"
-description = "A declarative DSL for easy state machines and rule-based logic."
+description = "A declarative DSL, for defining rule-based state machines."
 license = "MIT OR Apache-2.0"
 homepage = "https://github.com/LoganFlaherty/banish"
 repository = "https://github.com/LoganFlaherty/banish"
@@ -10,4 +10,4 @@ readme = "README.md"
 keywords = ["state-machine", "dsl", "declarative", "rules-engine"]
 
 [dependencies]
-banish_derive = "1.1.2"
+banish_derive = "1.1.4"
