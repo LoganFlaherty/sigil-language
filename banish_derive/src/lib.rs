@@ -1,10 +1,11 @@
 //! # Banish
-//! An easy to use DSL for creating state machines and rules-base logic.
-//! It allows you to define "States" and "Rules" that execute until they reach a fixed point or transition.
+//! Banish is a declarative DSL for building rule-driven state machines in Rust. 
+//! It allows you to define states and rules that execute until they reach a stable 
+//! fixed point or trigger transitions, making complex control flow easier to express and reason about.
 //! This is the macro implementation for the `banish` crate, which provides the public API and user-facing documentation.
 
 use proc_macro;
-use proc_macro2;
+use proc_macro2::TokenTree;
 use quote::quote;
 use syn::{
     Expr, Ident, Result, Stmt, Token, braced,
@@ -71,7 +72,22 @@ impl Parse for Rule {
 
         let condition: Option<Expr> = if input.peek(syn::token::Brace) {
             None
-        } else { Some(input.parse::<Expr>()?) };
+        } else {
+            let mut cond_tokens = proc_macro2::TokenStream::new();
+            
+            // Loop until we see the start of the body block
+            while !input.peek(syn::token::Brace) {
+                if input.is_empty() {
+                    return Err(input.error("Unexpected end of input, expected rule body '{'"));
+                }
+                // Pull one token at a time (e.g., "buffer", "[", "idx", "]", "==", "target")
+                cond_tokens.extend(std::iter::once(input.parse::<TokenTree>()?));
+            }
+            
+            // Now parse those isolated tokens as an Expression.
+            // Since the '{' isn't in 'cond_tokens', syn can't mistake it for a struct!
+            Some(syn::parse2(cond_tokens)?)
+        };
 
         let content: syn::parse::ParseBuffer<'_>;
         braced!(content in input);
@@ -213,7 +229,7 @@ fn generate_stmt(stmt: &BanishStmt, input: &Context) -> proc_macro2::TokenStream
             let target: usize = input.states
                 .iter()
                 .position(|state| &state.name == transition)
-                .unwrap_or_else(|| { panic!("Invalid state transition target {}", transition); });
+                .unwrap_or_else(|| { panic!("Error: Invalid state transition target {}", transition); });
             
             let target: syn::Index = syn::Index::from(target);
             quote! {
